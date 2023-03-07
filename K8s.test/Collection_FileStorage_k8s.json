@@ -1,0 +1,668 @@
+{
+	"info": {
+		"_postman_id": "7e10d772-7a24-4ec8-bcf1-232126a52ab0",
+		"name": "K8_Testkube",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "20316280"
+	},
+	"item": [
+		{
+			"name": "Global Storage",
+			"item": [
+				{
+					"name": "[Initial State] Global Storage",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Upload testfile - Verify API response status code\", function () {\r",
+									"  pm.response.to.have.status(201);\r",
+									"});\r",
+									"\r",
+									"pm.sendRequest(pm.environment.get('baseUrl') + \"/api/v1/storage/global/files/search?filter=path = 'foo/bar/temp.txt'&limit=100\", function (err, response) {\r",
+									"    var jsonData = response.json();\r",
+									"\r",
+									"    //Save timestamp to variable as input for the testcase.\r",
+									"    pm.environment.set(\"temp_timestamp\", jsonData.data[0].timestamp);\r",
+									"   \r",
+									"    pm.test(\"Search for testfile - Verify API response status code & successfully uploaded file.\", function () {\r",
+									"        pm.expect(response).to.have.property('code', 200);    \r",
+									"        pm.expect(jsonData.data[0].path).to.eql(\"foo/bar/temp.txt\");\r",
+									"    });\r",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						},
+						{
+							"listen": "prerequest",
+							"script": {
+								"exec": [
+									""
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "path",
+									"value": "foo/bar",
+									"type": "text"
+								},
+								{
+									"key": "file",
+									"type": "file",
+									"src": "/data/uploads/temp.txt"
+								}
+							]
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/storage/global/files/upload",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"storage",
+								"global",
+								"files",
+								"upload"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Global Search",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Verify File path\", function () {\r",
+									"    var jsonData = pm.response.json();\r",
+									"    pm.expect(jsonData.data[0].path).to.eql(\"foo/bar/temp.txt\");\r",
+									"});\r",
+									"\r",
+									"pm.test(\"API response status code\", function () {\r",
+									"    pm.response.to.have.status(200);\r",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/storage/global/files/search?filter=path = 'foo/bar/temp.txt'&limit=100",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"storage",
+								"global",
+								"files",
+								"search"
+							],
+							"query": [
+								{
+									"key": "filter",
+									"value": "path = 'foo/bar/temp.txt'"
+								},
+								{
+									"key": "limit",
+									"value": "100"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Global Download",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Verify file content\", function () {\r",
+									"    pm.response.to.have.body(\"SESANOR_SEMAREX\");\r",
+									"});\r",
+									"\r",
+									"pm.test(\"API response status code\", function () {\r",
+									"    pm.response.to.have.status(200);\r",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n  \"path\": \"foo/bar/temp.txt\"\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/storage/global/files/download",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"storage",
+								"global",
+								"files",
+								"download"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "[Exit State] Global Storage",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Search for files - Verify response code\", function () {\r",
+									"    pm.response.to.have.status(200);\r",
+									"});\r",
+									"\r",
+									"var data = pm.response.json().data;\r",
+									"var count = Object.keys(data).length;\r",
+									"var loopCount = 0;\r",
+									"\r",
+									"while(loopCount < count)\r",
+									"{\r",
+									"    var path = data[loopCount].path;\r",
+									"\r",
+									"    const options = {\r",
+									"    url:  pm.environment.get('baseUrl') + \"/api/v1/storage/global/files/delete\", \r",
+									"    method: 'POST',\r",
+									"    header: {\r",
+									"        \"Content-Type\": \"application/json\",\r",
+									"        },\r",
+									"    body: {\r",
+									"        mode: 'raw',\r",
+									"        raw: JSON.stringify({\r",
+									"            \"path\": path\r",
+									"            })\r",
+									"        }\r",
+									"    };\r",
+									"\r",
+									"    pm.sendRequest(options, function (err, response) {\r",
+									"        pm.test(\"Delete file(s) - Verify response code\", function () {\r",
+									"            pm.expect(response).to.have.property('code', 204);\r",
+									"        });  \r",
+									"    });\r",
+									"\r",
+									"    loopCount++;\r",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/storage/global/files/search",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"storage",
+								"global",
+								"files",
+								"search"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Object Storage",
+			"item": [
+				{
+					"name": "Initialize model/object",
+					"item": [
+						{
+							"name": "Create modelDefinition",
+							"request": {
+								"method": "POST",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\r\n    \"modelId\": \"abb.hydra.test\",\r\n    \"name\": \"ModelDefinition for hydra testing\",\r\n    \"description\": \"ModelDefinition for hydra testing.\",\r\n    \"tags\": [\r\n    \"Process Automation\"\r\n    ],\r\n    \"components\": {\r\n    }\r\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{baseUrl_typeregistry}}/api/v1.0/modelDefinitions",
+									"host": [
+										"{{baseUrl_typeregistry}}"
+									],
+									"path": [
+										"api",
+										"v1.0",
+										"modelDefinitions"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Add TypeDefinitions to modelDefinitions",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											""
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"request": {
+								"method": "POST",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\r\n  \"model\": \"abb.hydra.test\",\r\n  \"typeId\": \"abb.object.test\",\r\n  \"name\": \"Hydra object test\",\r\n  \"description\": \"Hydra object test\",\r\n  \"version\": \"1.0.0\"\r\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{baseUrl_typeregistry}}/api/v1.0/modelDefinitions/:model/types",
+									"host": [
+										"{{baseUrl_typeregistry}}"
+									],
+									"path": [
+										"api",
+										"v1.0",
+										"modelDefinitions",
+										":model",
+										"types"
+									],
+									"variable": [
+										{
+											"key": "model",
+											"value": "abb.hydra.test"
+										}
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Get/create Object models",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"var data = pm.response.json().data;\r",
+											"var len = Object.keys(data).length;\r",
+											"\r",
+											"if(len == 0)\r",
+											"{\r",
+											"    //No objects for model\r",
+											"    //Create new opbject\r",
+											"    const options_object = {\r",
+											"    url:  pm.environment.get('baseUrl_infomodel') + \"/api/v1.0/objects\", \r",
+											"    method: 'POST',\r",
+											"    header: {\r",
+											"        \"Content-Type\": \"application/json\",\r",
+											"        \"Ability-Tenant-Id\" : pm.environment.get('tenant_id')\r",
+											"        },\r",
+											"    body: {\r",
+											"        mode: 'raw',\r",
+											"        raw: JSON.stringify({\r",
+											"            \"model\": \"abb.hydra.test\",\r",
+											"            \"type\": \"abb.object.test@1\"\r",
+											"            })\r",
+											"        }\r",
+											"    };\r",
+											"\r",
+											"    pm.sendRequest(options_object, function (err, response) {\r",
+											"        //201 - Type definition was added to database\r",
+											"        pm.expect(response).to.have.property('code', 201);\r",
+											"        console.log(\"Created object : \" + response.code);  \r",
+											"    }); \r",
+											"}\r",
+											"else if(len > 0)\r",
+											"{\r",
+											"    //Save objectId to env file-\r",
+											"    pm.environment.set(\"test-object\", data[0].objectId)\r",
+											"}\r",
+											"else\r",
+											"{\r",
+											"    console.log(\"Error\");\r",
+											"}"
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"request": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "Ability-Tenant-Id",
+										"value": "{{tenant_id}}",
+										"type": "text"
+									}
+								],
+								"url": {
+									"raw": "{{baseUrl_infomodel}}/api/v1.0/objects?filter=model = '{{test-model}}'",
+									"host": [
+										"{{baseUrl_infomodel}}"
+									],
+									"path": [
+										"api",
+										"v1.0",
+										"objects"
+									],
+									"query": [
+										{
+											"key": "filter",
+											"value": "model = '{{test-model}}'"
+										}
+									]
+								}
+							},
+							"response": []
+						}
+					]
+				},
+				{
+					"name": "[Initial State] Object Storage",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Upload testfile - Verify API response status code\", function () {\r",
+									"  pm.response.to.have.status(201);\r",
+									"});\r",
+									"\r",
+									"pm.sendRequest(pm.environment.get('baseUrl') + \"/api/v1/storage/object/files/search?filter=path='temp.txt'\", function (err, response) {\r",
+									"    var jsonData = response.json();\r",
+									"\r",
+									"    //Save timestamp to variable as input for the testcase.\r",
+									"    pm.environment.set(\"temp_timestamp\", jsonData.data[0].timestamp);\r",
+									"   \r",
+									"    pm.test(\"Search for testfile - Verify API response status code & successfully uploaded file.\", function () {\r",
+									"        pm.expect(response).to.have.property('code', 200);\r",
+									"        pm.expect(jsonData.data[0].path).to.eql(\"temp.txt\");\r",
+									"        pm.expect(jsonData.data[0].size).to.eql(0.0146484375);\r",
+									"        pm.expect(jsonData.data[0].objectId).to.eql(pm.environment.get('test-object'));\r",
+									"        pm.expect(jsonData.data[0].model).to.eql(pm.environment.get('test-model'));\r",
+									"    });\r",
+									"});\r",
+									""
+								],
+								"type": "text/javascript"
+							}
+						},
+						{
+							"listen": "prerequest",
+							"script": {
+								"exec": [
+									"//Create model/object (API)"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "file",
+							"file": {
+								"src": "/data/uploads/temp.txt"
+							}
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/objects/:object/models/:model/files/:path",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"objects",
+								":object",
+								"models",
+								":model",
+								"files",
+								":path"
+							],
+							"variable": [
+								{
+									"key": "object",
+									"value": "{{test-object}}"
+								},
+								{
+									"key": "model",
+									"value": "{{test-model}}"
+								},
+								{
+									"key": "path",
+									"value": "temp.txt"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Object Search",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"API response status code\", function () {\r",
+									"    pm.response.to.have.status(200);\r",
+									"});\r",
+									"\r",
+									"pm.test(\"Verify file objectId\", function () {\r",
+									"    var jsonData = pm.response.json();\r",
+									"    pm.expect(jsonData.data[0].objectId).to.eql(pm.environment.get('test-object'));\r",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"method": "GET",
+						"header": [],
+						"body": {
+							"mode": "formdata",
+							"formdata": []
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/storage/object/files/search?filter=objectId = '{{test-object}}'",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"storage",
+								"object",
+								"files",
+								"search"
+							],
+							"query": [
+								{
+									"key": "filter",
+									"value": "objectId = '{{test-object}}'"
+								},
+								{
+									"key": "limit",
+									"value": "0",
+									"disabled": true
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Object Download",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"API response status code\", function () {\r",
+									"    pm.response.to.have.status(200);\r",
+									"});\r",
+									"\r",
+									"pm.test(\"Verify file content\", function () {\r",
+									"    pm.response.to.have.body(\"SESANOR_SEMAREX\");\r",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/objects/:object/models/:model/files/:path",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"objects",
+								":object",
+								"models",
+								":model",
+								"files",
+								":path"
+							],
+							"variable": [
+								{
+									"key": "object",
+									"value": "{{test-object}}"
+								},
+								{
+									"key": "model",
+									"value": "{{test-model}}"
+								},
+								{
+									"key": "path",
+									"value": "temp.txt"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "[Exit State] Object Storage",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Search for files - Verify response code\", function () {\r",
+									"    pm.response.to.have.status(200);\r",
+									"});\r",
+									"\r",
+									"var data = pm.response.json().data;\r",
+									"var count = Object.keys(data).length;\r",
+									"var loopCount = 0;\r",
+									"\r",
+									"while(loopCount < count)\r",
+									"{\r",
+									"    var path = data[loopCount].path;\r",
+									"    var objectId = data[loopCount].objectId;\r",
+									"    var model = data[loopCount].model;\r",
+									"\r",
+									"    const options = {\r",
+									"    url:  pm.environment.get('baseUrl') + \"/api/v1/objects/\" + objectId + \"/models/\" + model + \"/files/\" + path, \r",
+									"    method: 'DELETE',\r",
+									"    };\r",
+									"\r",
+									"    pm.sendRequest(options, function (err, response) {\r",
+									"        pm.test(\"Delete file(s) - Verify response code\", function () {\r",
+									"            pm.expect(response).to.have.property('code', 204);\r",
+									"        });  \r",
+									"    });  \r",
+									"\r",
+									"    loopCount++;\r",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/storage/object/files/search",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"storage",
+								"object",
+								"files",
+								"search"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		}
+	]
+}
